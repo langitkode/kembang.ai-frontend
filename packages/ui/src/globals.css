@@ -1,0 +1,52 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --accent: 236 80% 66%; /* Custom Indigo #6366F1 */
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --border: 240 5.9% 15%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  code,
+  pre,
+  .font-mono {
+    @apply font-mono;
+    font-family: "IBM Plex Mono", monospace;
+  }
+}
+
+/* Sharp UI Classes */
+.card-sharp {
+  @apply border bg-background px-6 py-4 rounded-sm;
+}
+
+.btn-primary {
+  @apply bg-foreground text-background px-4 py-2 text-sm font-semibold rounded-sm hover:opacity-90 transition-opacity;
+}
+
+.input-sharp {
+  @apply border bg-background px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-1 focus:ring-accent transition-all font-mono;
+}

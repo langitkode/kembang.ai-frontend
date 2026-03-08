@@ -1,0 +1,13 @@
+{
+  "name": "@kembang/chat-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "dependencies": {
+    "zustand": "^4.4.0",
+    "@kembang/api-client": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

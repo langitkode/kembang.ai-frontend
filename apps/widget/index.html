@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kembang AI Widget Playground</title>
+    <style>
+        body {
+            background-color: #0c0c0c;
+            color: #eee;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .kb-brand {
+            color: #6366F1;
+            font-family: monospace;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Widget <span class="kb-brand">Playground</span></h1>
+        <p>
+            This is a local environment to test the <span class="kb-brand">Kembang AI</span> embeddable widget.
+            The widget is currently initialized with a mock API Key.
+        </p>
+    </div>
+
+    <!-- The Widget Target -->
+    <div id="kembang-chat-widget"></div>
+
+    <!-- Load the bundled widget (generated in dist/) -->
+    <script src="./dist/index.global.js"></script>
+
+    <script>
+        // Wait for bundle to load
+        window.addEventListener('load', () => {
+            if (window.KembangAI) {
+                window.KembangAI.init({
+                    apiKey: 'kw_live_bali_coffee_001',
+                    userIdentifier: 'tester_local_01',
+                    containerId: 'kembang-chat-widget',
+                    accentColor: '#6366F1',
+                    title: 'BALI COFFEE ASSISTANT'
+                });
+            } else {
+                console.error('KembangAI Bundle not found. Run "npm run build" in apps/widget first.');
+            }
+        });
+    </script>
+</body>
+
+</html>
