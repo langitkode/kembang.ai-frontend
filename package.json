@@ -2,14 +2,20 @@
   "name": "kembang-ai-frontend",
   "version": "1.0.0",
   "private": true,
-  "description": "Monorepo for Kembang AI Frontend (Developer Console & Widget SDK)",
+  "description": "Monorepo for Kembang AI Frontend (Developer Console, Tenant Dashboard & Widget SDK)",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
+    "dev:console": "npm run dev --workspace=@kembang/console",
+    "dev:tenant": "npm run dev --workspace=@kembang/tenant",
+    "dev:widget": "npm run dev --workspace=@kembang/widget",
     "build": "npm run build --workspaces --if-present",
+    "build:console": "npm run build --workspace=@kembang/console",
+    "build:tenant": "npm run build --workspace=@kembang/tenant",
+    "build:widget": "npm run build --workspace=@kembang/widget",
     "lint": "npm run lint --workspaces --if-present"
   },
   "keywords": [

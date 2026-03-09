@@ -21,6 +21,28 @@ interface ChatState {
   reset: () => void;
 }
 
+const safeLocalStorage = {
+  getItem: (key: string) => {
+    if (
+      typeof window !== "undefined" &&
+      window.localStorage &&
+      typeof window.localStorage.getItem === "function"
+    ) {
+      return window.localStorage.getItem(key);
+    }
+    return null;
+  },
+  setItem: (key: string, value: string) => {
+    if (
+      typeof window !== "undefined" &&
+      window.localStorage &&
+      typeof window.localStorage.setItem === "function"
+    ) {
+      window.localStorage.setItem(key, value);
+    }
+  },
+};
+
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isThinking: false,
@@ -32,7 +54,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     api.setApiKey(apiKey);
     set({ userIdentifier: userIdentifier || null });
     // Load conversationId from localStorage if available
-    const savedId = localStorage.getItem(`chat_cid_${apiKey}`);
+    const savedId = safeLocalStorage.getItem(`chat_cid_${apiKey}`);
     if (savedId) set({ conversationId: savedId });
   },
 
@@ -73,7 +95,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       // Save session
       if (response.conversation_id) {
-        localStorage.setItem(`chat_cid_active`, response.conversation_id);
+        safeLocalStorage.setItem(`chat_cid_active`, response.conversation_id);
       }
     } catch (err: any) {
       set({

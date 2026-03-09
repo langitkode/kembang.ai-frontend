@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@kembang/api-client": ["./packages/api-client/src/index.ts"],
+      "@kembang/chat-sdk": ["./packages/chat-sdk/src/index.ts"],
+      "@kembang/ui": ["./packages/ui/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "jsx": "preserve"
+  },
+  "exclude": [
+    "node_modules",
+    "**/dist/**",
+    "**/.next/**",
+    "console_backup/**",
+    "apps/console/**",
+    "apps/widget/**"
+  ]
+}
