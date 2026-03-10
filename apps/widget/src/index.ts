@@ -1,3 +1,6 @@
+// Browser polyfill for Node.js process
+(window as any).process = { env: {} };
+
 import { useChatStore } from "@kembang/chat-sdk";
 
 export const WIDGET_VERSION = "1.0.0";
