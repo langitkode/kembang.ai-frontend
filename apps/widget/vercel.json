@@ -1,0 +1,30 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "public": true,
+  "rewrites": [
+    {
+      "source": "/widget.js",
+      "destination": "/index-1.0.0.global.js"
+    },
+    {
+      "source": "/widget-:version.js",
+      "destination": "/index-:version.global.js"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    }
+  ]
+}

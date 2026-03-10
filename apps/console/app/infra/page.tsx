@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   Loader2,
   Zap,
+  Database,
+  Cpu,
 } from "lucide-react";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,6 +29,12 @@ interface HealthResponse {
   status: "ok" | "degraded" | "down";
 }
 
+interface CircuitBreakerState {
+  llm: { healthy: boolean; state: string; model?: string };
+  embedding: { healthy: boolean; state: string; model?: string };
+  database: { healthy: boolean; state: string };
+}
+
 interface MetricsResponse {
   total_requests: number;
   total_errors: number;
@@ -36,24 +44,43 @@ interface MetricsResponse {
 
 export default function InfrastructurePage() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [circuitBreakers, setCircuitBreakers] = useState<CircuitBreakerState | null>(null);
   const [metrics, setMetrics] = useState<MetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchSystemHealth();
+    fetchCircuitBreakers();
     fetchMetrics();
   }, []);
 
   async function fetchSystemHealth() {
     try {
       setLoading(true);
-      const data = await api.getSystemHealth();
+      const data = await api.getHealth();
       setHealth(data);
     } catch (error) {
       console.error("Failed to fetch system health:", error);
       toast.error("Failed to load system health");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchCircuitBreakers() {
+    try {
+      const data = await api.getCircuitBreakers();
+      setCircuitBreakers(data);
+      
+      // Show warnings for degraded services
+      if (data && !data.embedding?.healthy) {
+        toast.warning("Embedding service degraded - responses may be slower");
+      }
+      if (data && !data.llm?.healthy) {
+        toast.error("LLM service unavailable");
+      }
+    } catch (error) {
+      console.error("Failed to fetch circuit breakers:", error);
     }
   }
 
@@ -68,7 +95,7 @@ export default function InfrastructurePage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       <header className="flex justify-between items-end border-b pb-6">
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-tight">
@@ -78,34 +105,71 @@ export default function InfrastructurePage() {
             Real-time status of all system components and services.
           </p>
         </div>
-        <Badge variant="outline" className="gap-2">
-          <Activity className="w-3 h-3" />
-          {loading ? "Loading..." : "All Systems Operational"}
+        <Badge variant="outline" className={cn(
+          "gap-2",
+          health?.status === "ok" 
+            ? "text-green-500 border-green-500/50" 
+            : "text-yellow-500 border-yellow-500/50"
+        )}>
+          {loading ? (
+            <Loader2 className="w-3 h-3 animate-spin" />
+          ) : health?.status === "ok" ? (
+            <>
+              <CheckCircle2 className="w-3 h-3" />
+              All Systems Operational
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-3 h-3" />
+              Degraded Performance
+            </>
+          )}
         </Badge>
       </header>
 
+      {/* Service Degradation Alert */}
+      {circuitBreakers && !circuitBreakers.embedding?.healthy && (
+        <Alert className="bg-yellow-500/5 border-yellow-500/20">
+          <AlertTriangle className="w-4 h-4 text-yellow-500" />
+          <AlertTitle className="text-yellow-600 dark:text-yellow-400">Embedding Service Degraded</AlertTitle>
+          <AlertDescription className="text-muted-foreground">
+            Document search may be slower than usual. LLM responses will continue normally.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {circuitBreakers && !circuitBreakers.llm?.healthy && (
+        <Alert className="bg-red-500/5 border-red-500/20">
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <AlertTitle className="text-red-600 dark:text-red-400">LLM Service Unavailable</AlertTitle>
+          <AlertDescription className="text-muted-foreground">
+            AI responses are temporarily unavailable. Please try again later.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* System Health Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* System Status */}
+        {/* LLM Service */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
-              <Activity className="w-5 h-5 text-green-500" />
-              {loading ? (
+              <Cpu className="w-5 h-5 text-violet-500" />
+              {loading || !circuitBreakers ? (
                 <Skeleton className="h-5 w-16" />
-              ) : health?.status === "ok" ? (
+              ) : circuitBreakers.llm?.healthy ? (
                 <Badge variant="outline" className="text-green-500 border-green-500/50">
-                  Healthy
+                  Operational
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-yellow-500 border-yellow-500/50">
-                  Degraded
+                <Badge variant="outline" className="text-red-500 border-red-500/50">
+                  Down
                 </Badge>
               )}
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {loading ? (
+            {loading || !circuitBreakers ? (
               <>
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-3 w-32" />
@@ -114,29 +178,134 @@ export default function InfrastructurePage() {
               <>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">
-                    System Status
+                    LLM Model
                   </p>
-                  <p className="text-lg font-semibold capitalize">
-                    {health?.status || "N/A"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Overall health
+                  <p className="text-sm font-semibold">
+                    {circuitBreakers.llm?.model || "N/A"}
                   </p>
                 </div>
-                <Progress value={health?.status === "ok" ? 100 : 50} className="h-1" />
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className={cn(
+                    "font-semibold",
+                    circuitBreakers.llm?.healthy ? "text-green-500" : "text-red-500"
+                  )}>
+                    {circuitBreakers.llm?.state || "Unknown"}
+                  </span>
+                </div>
               </>
             )}
           </CardContent>
         </Card>
 
-        {/* Total Requests */}
+        {/* Embedding Service */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start">
+              <Database className="w-5 h-5 text-blue-500" />
+              {loading || !circuitBreakers ? (
+                <Skeleton className="h-5 w-16" />
+              ) : circuitBreakers.embedding?.healthy ? (
+                <Badge variant="outline" className="text-green-500 border-green-500/50">
+                  Operational
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-red-500 border-red-500/50">
+                  Down
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {loading || !circuitBreakers ? (
+              <>
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                    Embedding Model
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {circuitBreakers.embedding?.model || "N/A"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className={cn(
+                    "font-semibold",
+                    circuitBreakers.embedding?.healthy ? "text-green-500" : "text-red-500"
+                  )}>
+                    {circuitBreakers.embedding?.state || "Unknown"}
+                  </span>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Database */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start">
+              <Server className="w-5 h-5 text-green-500" />
+              {loading || !circuitBreakers ? (
+                <Skeleton className="h-5 w-16" />
+              ) : circuitBreakers.database?.healthy ? (
+                <Badge variant="outline" className="text-green-500 border-green-500/50">
+                  Operational
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-red-500 border-red-500/50">
+                  Down
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {loading || !circuitBreakers ? (
+              <>
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                    Database
+                  </p>
+                  <p className="text-sm font-semibold">
+                    PostgreSQL
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className={cn(
+                    "font-semibold",
+                    circuitBreakers.database?.healthy ? "text-green-500" : "text-red-500"
+                  )}>
+                    {circuitBreakers.database?.state || "Unknown"}
+                  </span>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* API Gateway */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
               <Zap className="w-5 h-5 text-amber-500" />
-              <Badge variant="outline" className="text-blue-400 border-blue-400/50">
-                Live
-              </Badge>
+              {loading || !metrics ? (
+                <Skeleton className="h-5 w-16" />
+              ) : (
+                <Badge variant="outline" className="text-blue-400 border-blue-400/50">
+                  Live
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -154,91 +323,13 @@ export default function InfrastructurePage() {
                   <p className="text-lg font-semibold">
                     {metrics.total_requests.toLocaleString()}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    All-time API calls
-                  </p>
                 </div>
-                <Progress value={Math.min((metrics.total_requests % 1000) / 10, 100)} className="h-1" />
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Avg Latency */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
-              <Clock className="w-5 h-5 text-blue-500" />
-              <Badge variant="outline" className={cn(
-                metrics && metrics.avg_latency_ms < 300
-                  ? "text-green-500 border-green-500/50"
-                  : "text-yellow-500 border-yellow-500/50"
-              )}>
-                {metrics ? `${metrics.avg_latency_ms.toFixed(0)}ms` : "N/A"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loading || !metrics ? (
-              <>
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
-              </>
-            ) : (
-              <>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Avg Latency
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {metrics.avg_latency_ms.toFixed(2)}ms
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Response time
-                  </p>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">Avg Latency:</span>
+                  <span className="font-mono text-amber-500">
+                    {metrics.avg_latency_ms.toFixed(0)}ms
+                  </span>
                 </div>
-                <Progress value={Math.min((metrics.avg_latency_ms / 1000) * 100, 100)} className="h-1" />
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Error Rate */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
-              <AlertTriangle className="w-5 h-5 text-red-500" />
-              <Badge variant="outline" className={cn(
-                metrics && metrics.total_errors === 0
-                  ? "text-green-500 border-green-500/50"
-                  : metrics && metrics.total_errors < 10
-                  ? "text-yellow-500 border-yellow-500/50"
-                  : "text-red-500 border-red-500/50"
-              )}>
-                {metrics ? `${((metrics.total_errors / Math.max(metrics.total_requests, 1)) * 100).toFixed(2)}%` : "0%"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loading || !metrics ? (
-              <>
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
-              </>
-            ) : (
-              <>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Error Rate
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {metrics.total_errors} errors
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Total failures
-                  </p>
-                </div>
-                <Progress value={(metrics.total_errors / Math.max(metrics.total_requests, 1)) * 100} className="h-1" />
               </>
             )}
           </CardContent>

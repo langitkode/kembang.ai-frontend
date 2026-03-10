@@ -45,10 +45,13 @@
 
 <body>
     <div class="container">
-        <h1>Widget <span class="kb-brand">Playground</span></h1>
+        <h1>Widget <span class="kb-brand">Playground</span> <span style="font-size: 0.7em; opacity: 0.6;">v1.0.0</span></h1>
         <p>
             This is a local environment to test the <span class="kb-brand">Kembang AI</span> embeddable widget.
             The widget is currently initialized with a mock API Key.
+        </p>
+        <p style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+            Widget Version: <span id="widget-version">loading...</span>
         </p>
     </div>
 
@@ -56,12 +59,16 @@
     <div id="kembang-chat-widget"></div>
 
     <!-- Load the bundled widget (generated in dist/) -->
-    <script src="./dist/index.global.js"></script>
+    <script src="./dist/index-1.0.0.global.js"></script>
 
     <script>
         // Wait for bundle to load
         window.addEventListener('load', () => {
+            // Display widget version
+            const versionEl = document.getElementById('widget-version');
             if (window.KembangAI) {
+                versionEl.textContent = window.KembangAI.getVersion() || '1.0.0';
+                
                 window.KembangAI.init({
                     apiKey: 'kw_live_bali_coffee_001',
                     userIdentifier: 'tester_local_01',
@@ -71,6 +78,7 @@
                 });
             } else {
                 console.error('KembangAI Bundle not found. Run "npm run build" in apps/widget first.');
+                versionEl.textContent = 'Not loaded';
             }
         });
     </script>

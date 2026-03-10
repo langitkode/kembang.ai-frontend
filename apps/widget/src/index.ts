@@ -1,5 +1,7 @@
 import { useChatStore } from "@kembang/chat-sdk";
 
+export const WIDGET_VERSION = "1.0.0";
+
 export interface WidgetConfig {
   apiKey: string;
   userIdentifier?: string;
@@ -11,14 +13,19 @@ export interface WidgetConfig {
 class KembangWidget {
   private config: WidgetConfig;
   private container: HTMLElement | null = null;
+  public version: string = WIDGET_VERSION;
 
   constructor(config: WidgetConfig) {
     this.config = config;
     this.init();
   }
 
+  public getVersion(): string {
+    return this.version;
+  }
+
   private init() {
-    console.log("🌸 Kembang AI Widget Initializing...");
+    console.log(`🌸 Kembang AI Widget v${this.version} Initializing...`);
 
     // Initialize the store
     const store = useChatStore.getState();
@@ -147,4 +154,6 @@ class KembangWidget {
 // Global exposure
 (window as any).KembangAI = {
   init: (config: WidgetConfig) => new KembangWidget(config),
+  version: WIDGET_VERSION,
+  getVersion: () => WIDGET_VERSION,
 };

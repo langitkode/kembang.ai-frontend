@@ -79,6 +79,31 @@ class ApiClient {
     console.log("[API] Tenant-ID set to:", tenantId);
   }
 
+  // Health & System Monitoring
+  async getHealth(): Promise<any> {
+    const baseURL = this._instance.defaults.baseURL?.replace('/api/v1/', '/') || 'http://127.0.0.1:8000/';
+    const response = await axios.get(`${baseURL}health`);
+    return response.data;
+  }
+
+  async getEmbeddingHealth(): Promise<any> {
+    const baseURL = this._instance.defaults.baseURL?.replace('/api/v1/', '/') || 'http://127.0.0.1:8000/';
+    const response = await axios.get(`${baseURL}health/embedding`);
+    return response.data;
+  }
+
+  async getLLMHealth(): Promise<any> {
+    const baseURL = this._instance.defaults.baseURL?.replace('/api/v1/', '/') || 'http://127.0.0.1:8000/';
+    const response = await axios.get(`${baseURL}health/llm`);
+    return response.data;
+  }
+
+  async getCircuitBreakers(): Promise<any> {
+    const baseURL = this._instance.defaults.baseURL?.replace('/api/v1/', '/') || 'http://127.0.0.1:8000/';
+    const response = await axios.get(`${baseURL}health/circuit-breakers`);
+    return response.data;
+  }
+
   // Widget Chat (uses X-API-Key header)
   async sendMessage(data: ChatRequest): Promise<ChatResponse> {
     const response = await this._instance.post<ChatResponse>(

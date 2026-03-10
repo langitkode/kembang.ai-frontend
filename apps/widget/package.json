@@ -1,12 +1,15 @@
 {
   "name": "@kembang/widget",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
   "scripts": {
     "dev": "tsup src/index.ts --watch --dts",
-    "build": "tsup src/index.ts --format iife --minify --clean"
+    "build": "tsup src/index.ts --format iife --minify --clean --dts && node scripts/postbuild.js",
+    "build:version": "node scripts/version.js && npm run build"
   },
   "dependencies": {
     "@kembang/chat-sdk": "*",
