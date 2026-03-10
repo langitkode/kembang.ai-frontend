@@ -10,4 +10,7 @@ export default defineConfig({
   target: "esnext",
   outDir: "dist",
   noExternal: [/@kembang\/.*/, "zustand", "axios"],
+  define: {
+    process: JSON.stringify({ env: {} }),
+  },
 });
