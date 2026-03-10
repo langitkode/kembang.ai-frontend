@@ -157,3 +157,11 @@ class KembangWidget {
   version: WIDGET_VERSION,
   getVersion: () => WIDGET_VERSION,
 };
+
+// Auto-initialize if KembangConfig exists
+if ((window as any).KembangConfig) {
+  console.log('🌸 Auto-initializing widget from KembangConfig...');
+  setTimeout(() => {
+    (window as any).KembangAI.init((window as any).KembangConfig);
+  }, 100);
+}
